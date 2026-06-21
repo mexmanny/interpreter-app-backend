@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  COORDINATOR
+  INTERPRETER
+}
+
+enum AppointmentStatus {
+  OPEN
+  EXPIRED
+  ASSIGNED
+  CANCELLED
+  COMPLETED
+}
+
+enum AssignmentStatus {
+  REQUESTED
+  CONFIRMED
+  IN_PROGRESS
+  PATIENT_NO_SHOW
+  COMPLETED
+  CANCELLED
+}
+
+enum AssignmentEventType {
+  REQUESTED
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  PATIENT_NO_SHOW
+  RUNNING_LATE
+  CANCELLED
+  COMPLETED
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum UrgencyLevel {
+  STANDARD
+  SAME_DAY
+  URGENT
+}
+
+enum PdfGenerationStatus {
+  PENDING
+  IN_PROGRESS
+  GENERATED
+  FAILED
+  DELETED
+}
+
+enum PlatformEventType {
+  PDF_GENERATION_QUEUED
+  PDF_GENERATION_STARTED
+  PDF_SAVED_LOCALLY
+  PDF_GENERATION_SUCCEEDED
+  PDF_GENERATION_FAILED
+  PDF_DELETED
+  APPOINTMENT_EXPIRED
+  SMS_SENT
+  SMS_FAILED
+  EMAIL_SENT
+  EMAIL_FAILED
+}
+
+enum PlatformEventStatus {
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  interpreter Interpreter?
+}
+
+model Interpreter {
+  id                String   @id @default(cuid())
+  userId            String?  @unique
+  name              String
+  phone             String
+  email             String?
+  active            Boolean  @default(true)
+  transportEligible Boolean  @default(false)
+  coverageAreas     String[]
+  languages         String[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user        User?        @relation(fields: [userId], references: [id])
+  assignments Assignment[]
+  requests    AssignmentRequest[]
+}
+
+model Appointment {
+  id                  String            @id @default(cuid())
+  date                DateTime
+  startTime           DateTime
+  durationMinutes     Int
+  patientName         String
+  clientName          String
+  facilityName        String
+  address             String
+  contactNumber       String?
+  payAmountCents      Int
+  languageNeeded      String
+  coverageArea        String
+  transportRequired   Boolean           @default(false)
+  urgency             UrgencyLevel       @default(STANDARD)
+  status              AppointmentStatus  @default(OPEN)
+  coverageExpiresAt   DateTime
+  pdfStorageKey       String?
+  pdfUrl              String?
+  pdfGenerationStatus PdfGenerationStatus @default(PENDING)
+  pdfGenerationError  String?
+  pdfGeneratedAt      DateTime?
+  pdfDeletedAt        DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  assignments    Assignment[]
+  requests       AssignmentRequest[]
+  platformEvents PlatformEvent[]
+
+  @@index([status, coverageExpiresAt])
+  @@index([languageNeeded, coverageArea, status])
+}
+
+model AssignmentRequest {
+  id             String      @id @default(cuid())
+  appointmentId  String
+  interpreterId  String
+  note           String?
+  createdAt      DateTime    @default(now())
+
+  appointment Appointment  @relation(fields: [appointmentId], references: [id])
+  interpreter Interpreter  @relation(fields: [interpreterId], references: [id])
+
+  @@unique([appointmentId, interpreterId])
+}
+
+model Assignment {
+  id             String           @id @default(cuid())
+  appointmentId  String
+  interpreterId  String
+  status         AssignmentStatus @default(CONFIRMED)
+  confirmedAt    DateTime?        @default(now())
+  checkedInAt    DateTime?
+  checkedOutAt   DateTime?
+  reminderOneHourSentAt DateTime?
+  actualDuration Int?
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  appointment Appointment       @relation(fields: [appointmentId], references: [id])
+  interpreter Interpreter       @relation(fields: [interpreterId], references: [id])
+  events          AssignmentEvent[]
+  platformEvents  PlatformEvent[]
+
+  @@index([status])
+  @@index([interpreterId, createdAt])
+}
+
+model AssignmentEvent {
+  id           String              @id @default(cuid())
+  assignmentId String
+  type         AssignmentEventType
+  notes        String?
+  createdAt    DateTime            @default(now())
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+
+  @@index([assignmentId, createdAt])
+}
+
+model NotificationLog {
+  id             String              @id @default(cuid())
+  channel        NotificationChannel
+  status         NotificationStatus  @default(QUEUED)
+  recipient      String
+  subject        String?
+  message        String
+  providerId     String?
+  errorMessage   String?
+  assignmentId   String?
+  appointmentId  String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([status, createdAt])
+  @@index([assignmentId])
+  @@index([appointmentId])
+}
+
+model PlatformEvent {
+  id            String              @id @default(cuid())
+  appointmentId String?
+  assignmentId  String?
+  type          PlatformEventType
+  status        PlatformEventStatus
+  message       String?
+  errorMessage  String?
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  assignment  Assignment?  @relation(fields: [assignmentId], references: [id])
+
+  @@index([appointmentId, createdAt])
+  @@index([assignmentId, createdAt])
+  @@index([type, status])
+}

@@ -1,0 +1,1 @@
+ALTER TYPE "PlatformEventType" ADD VALUE 'PDF_SAVED_LOCALLY';
