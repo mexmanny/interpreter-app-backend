@@ -26,12 +26,13 @@ export const buildAppointmentIcs = (appointment: Appointment): string => {
       .join("\n"),
   );
 
+  // Omit METHOD — METHOD:PUBLISH makes many clients (especially Apple Calendar)
+  // treat a fetchable .ics URL as a subscription feed instead of a one-off event.
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Interpreter Platform//EN",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:appointment-${appointment.id}@interpreter-platform`,
     `DTSTAMP:${formatIcsUtc(now)}`,
@@ -40,6 +41,9 @@ export const buildAppointmentIcs = (appointment: Appointment): string => {
     `SUMMARY:${summary}`,
     `LOCATION:${location}`,
     `DESCRIPTION:${description}`,
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "TRANSP:OPAQUE",
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
