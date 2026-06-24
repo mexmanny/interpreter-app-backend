@@ -7,6 +7,7 @@ import { assignmentRoutes } from "./assignments/assignment.routes.js";
 import { healthRoutes } from "./health/health.routes.js";
 import { interpreterRoutes } from "./interpreters/interpreter.routes.js";
 import { reminderRoutes } from "./reminders/reminder.routes.js";
+import { offerRoutes } from "./offers/offer.routes.js";
 import { resolveHttpError } from "./lib/http-error.js";
 
 const app = Fastify({ logger: true });
@@ -17,6 +18,7 @@ await app.register(healthRoutes, { prefix: "/api" });
 await app.register(appointmentRoutes, { prefix: "/api" });
 await app.register(interpreterRoutes, { prefix: "/api" });
 await app.register(assignmentRoutes, { prefix: "/api" });
+await app.register(offerRoutes, { prefix: "/api" });
 await app.register(reminderRoutes, { prefix: "/api" });
 
 app.setErrorHandler((error, _request, reply) => {

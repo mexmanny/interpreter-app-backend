@@ -7,22 +7,41 @@ export const createAssignmentRequest = (data: { appointmentId: string; interpret
 export const findAssignmentRequestById = (id: string) =>
   prisma.assignmentRequest.findUniqueOrThrow({ where: { id }, include: { appointment: true, interpreter: true } });
 
-export const createConfirmedAssignmentFromRequest = async (requestId: string) =>
+export const createConfirmedAssignmentFromRequest = async (requestId: string) => {
+  const request = await prisma.assignmentRequest.findUniqueOrThrow({ where: { id: requestId } });
+  return createConfirmedAssignment(request.appointmentId, request.interpreterId);
+};
+
+export const createConfirmedAssignment = async (
+  appointmentId: string,
+  interpreterId: string,
+) =>
   prisma.$transaction(async (tx) => {
-    const request = await tx.assignmentRequest.findUniqueOrThrow({ where: { id: requestId } });
+    const appointment = await tx.appointment.findUniqueOrThrow({
+      where: { id: appointmentId },
+    });
+
+    if (
+      appointment.status !== AppointmentStatus.OPEN &&
+      appointment.status !== AppointmentStatus.OFFERED
+    ) {
+      throw Object.assign(new Error("Appointment is not available for assignment"), {
+        statusCode: 409,
+      });
+    }
 
     const assignment = await tx.assignment.create({
       data: {
-        appointmentId: request.appointmentId,
-        interpreterId: request.interpreterId,
+        appointmentId,
+        interpreterId,
         status: AssignmentStatus.CONFIRMED,
-        events: { create: { type: AssignmentEventType.CONFIRMED } }
-      }
+        events: { create: { type: AssignmentEventType.CONFIRMED } },
+      },
     });
 
     await tx.appointment.update({
-      where: { id: request.appointmentId },
-      data: { status: AppointmentStatus.ASSIGNED }
+      where: { id: appointmentId },
+      data: { status: AppointmentStatus.ASSIGNED },
     });
 
     return assignment;

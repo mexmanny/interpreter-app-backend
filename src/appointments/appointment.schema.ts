@@ -16,6 +16,16 @@ export const createAppointmentSchema = z.object({
   transportRequired: z.boolean().default(false),
   urgency: z.enum(["STANDARD", "SAME_DAY", "URGENT"]).default("STANDARD"),
   savePdfLocally: z.boolean().default(true),
+  assignmentMode: z.enum(["OPEN", "ASSIGN", "OFFER"]).default("OPEN"),
+  interpreterId: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if ((data.assignmentMode === "ASSIGN" || data.assignmentMode === "OFFER") && !data.interpreterId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "interpreterId is required for ASSIGN and OFFER modes",
+      path: ["interpreterId"],
+    });
+  }
 });
 
 export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;

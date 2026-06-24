@@ -15,6 +15,7 @@ enum UserRole {
 
 enum AppointmentStatus {
   OPEN
+  OFFERED
   EXPIRED
   ASSIGNED
   CANCELLED
@@ -86,6 +87,12 @@ enum PlatformEventStatus {
   FAILED
 }
 
+enum AssignmentOfferStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -113,6 +120,7 @@ model Interpreter {
   user        User?        @relation(fields: [userId], references: [id])
   assignments Assignment[]
   requests    AssignmentRequest[]
+  offers      AssignmentOffer[]
 }
 
 model Appointment {
@@ -143,6 +151,7 @@ model Appointment {
 
   assignments    Assignment[]
   requests       AssignmentRequest[]
+  offers         AssignmentOffer[]
   platformEvents PlatformEvent[]
 
   @@index([status, coverageExpiresAt])
@@ -160,6 +169,22 @@ model AssignmentRequest {
   interpreter Interpreter  @relation(fields: [interpreterId], references: [id])
 
   @@unique([appointmentId, interpreterId])
+}
+
+model AssignmentOffer {
+  id             String                @id @default(cuid())
+  appointmentId  String
+  interpreterId  String
+  token          String                @unique
+  status         AssignmentOfferStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime              @default(now())
+  respondedAt    DateTime?
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  interpreter Interpreter @relation(fields: [interpreterId], references: [id])
+
+  @@index([appointmentId, status])
 }
 
 model Assignment {
