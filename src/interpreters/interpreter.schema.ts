@@ -13,3 +13,7 @@ export const createInterpreterSchema = z.object({
 
 export type CreateInterpreterInput = z.infer<typeof createInterpreterSchema>;
 export const createInterpreterJsonSchema = zodToJsonSchema(createInterpreterSchema);
+
+export const updateInterpreterSchema = createInterpreterSchema;
+export type UpdateInterpreterInput = z.infer<typeof updateInterpreterSchema>;
+export const updateInterpreterJsonSchema = zodToJsonSchema(updateInterpreterSchema);
