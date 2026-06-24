@@ -21,7 +21,6 @@ export const buildAssignmentConfirmedMessage = (
 ) => {
   const detailsLink = `${env.WEB_APP_URL}/interpreter/assignments/${assignmentId}`;
   const pdfLink = `${env.WEB_APP_URL}/api/appointments/${appointment.id}/pdf`;
-  // TODO(calendar): Replace placeholder when ICS endpoint is implemented.
   const calendarLink = `${env.WEB_APP_URL}/api/appointments/${appointment.id}/calendar.ics`;
 
   return [
@@ -33,8 +32,10 @@ export const buildAssignmentConfirmedMessage = (
     appointment.facilityName,
     appointment.address,
     "",
-    "Download PDF / View Details:",
+    "Download PDF:",
     pdfLink,
+    "",
+    "Check in and Check out on this link:",
     detailsLink,
     "",
     "Add to calendar:",
