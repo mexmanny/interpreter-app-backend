@@ -90,4 +90,23 @@ export async function appointmentRoutes(app: FastifyInstance) {
       )
       .send(ics);
   });
+
+  // Served without a .ics URL suffix so mobile clients import a single event
+  // instead of offering to subscribe to a recurring calendar feed.
+  app.get("/appointments/:appointmentId/calendar/file", async (request, reply) => {
+    const { appointmentId } = request.params as { appointmentId: string };
+    const appointment = await findAppointmentById(appointmentId);
+    if (!appointment) {
+      throw app.httpErrors.notFound("Appointment not found");
+    }
+
+    const ics = buildAppointmentIcs(appointment);
+    return reply
+      .header("Content-Type", "application/octet-stream")
+      .header(
+        "Content-Disposition",
+        `attachment; filename="interpreter-session-${appointmentId}.ics"`,
+      )
+      .send(ics);
+  });
 }

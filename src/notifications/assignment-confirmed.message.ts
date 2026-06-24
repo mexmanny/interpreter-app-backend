@@ -21,7 +21,7 @@ export const buildAssignmentConfirmedMessage = (
 ) => {
   const detailsLink = `${env.WEB_APP_URL}/interpreter/assignments/${assignmentId}`;
   const pdfLink = `${env.WEB_APP_URL}/api/appointments/${appointment.id}/pdf`;
-  const calendarLink = `${env.WEB_APP_URL}/api/appointments/${appointment.id}/calendar.ics`;
+  const calendarLink = `${env.WEB_APP_URL}/appointments/${appointment.id}/calendar`;
 
   return [
     "Session Assigned",
