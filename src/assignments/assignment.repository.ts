@@ -69,3 +69,19 @@ export const markReminderOneHourSent = (id: string) =>
     where: { id },
     data: { reminderOneHourSentAt: new Date() },
   });
+
+export const findAssignmentById = (id: string) =>
+  prisma.assignment.findUnique({
+    where: { id },
+    include: {
+      appointment: true,
+      interpreter: true,
+      events: { orderBy: { createdAt: "asc" } },
+    },
+  });
+
+export const findAssignmentEventsByAssignmentId = (assignmentId: string) =>
+  prisma.assignmentEvent.findMany({
+    where: { assignmentId },
+    orderBy: { createdAt: "asc" },
+  });

@@ -68,3 +68,10 @@ export const findOpenAppointments = () =>
 
 export const findAppointmentById = (id: string) =>
   prisma.appointment.findUnique({ where: { id } });
+
+export const findAssignmentRequestsByAppointmentId = (appointmentId: string) =>
+  prisma.assignmentRequest.findMany({
+    where: { appointmentId },
+    include: { interpreter: true },
+    orderBy: { createdAt: "asc" },
+  });

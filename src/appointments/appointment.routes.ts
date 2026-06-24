@@ -3,6 +3,7 @@ import { createAppointment } from "./appointment.service.js";
 import { createAppointmentJsonSchema, createAppointmentSchema } from "./appointment.schema.js";
 import {
   findAppointmentById,
+  findAssignmentRequestsByAppointmentId,
   findOpenAppointments,
 } from "./appointment.repository.js";
 import { listPlatformEventsByAppointmentId } from "../platform-events/platform-event.repository.js";
@@ -11,6 +12,7 @@ import {
   readLocalPdf,
 } from "../storage/local-pdf.service.js";
 import { downloadPdf } from "../storage/r2.service.js";
+import { buildAppointmentIcs } from "../calendar/ics.service.js";
 
 export async function appointmentRoutes(app: FastifyInstance) {
   app.post("/appointments", {
@@ -23,6 +25,24 @@ export async function appointmentRoutes(app: FastifyInstance) {
 
   app.get("/appointments/open", async () => {
     return findOpenAppointments();
+  });
+
+  app.get("/appointments/:appointmentId", async (request) => {
+    const { appointmentId } = request.params as { appointmentId: string };
+    const appointment = await findAppointmentById(appointmentId);
+    if (!appointment) {
+      throw app.httpErrors.notFound("Appointment not found");
+    }
+    return appointment;
+  });
+
+  app.get("/appointments/:appointmentId/requests", async (request) => {
+    const { appointmentId } = request.params as { appointmentId: string };
+    const appointment = await findAppointmentById(appointmentId);
+    if (!appointment) {
+      throw app.httpErrors.notFound("Appointment not found");
+    }
+    return findAssignmentRequestsByAppointmentId(appointmentId);
   });
 
   app.get("/appointments/:appointmentId/events", async (request) => {
@@ -52,5 +72,22 @@ export async function appointmentRoutes(app: FastifyInstance) {
       .header("Content-Type", "application/pdf")
       .header("Content-Disposition", `attachment; filename="${filename}"`)
       .send(pdf);
+  });
+
+  app.get("/appointments/:appointmentId/calendar.ics", async (request, reply) => {
+    const { appointmentId } = request.params as { appointmentId: string };
+    const appointment = await findAppointmentById(appointmentId);
+    if (!appointment) {
+      throw app.httpErrors.notFound("Appointment not found");
+    }
+
+    const ics = buildAppointmentIcs(appointment);
+    return reply
+      .header("Content-Type", "text/calendar; charset=utf-8")
+      .header(
+        "Content-Disposition",
+        `attachment; filename="appointment-${appointmentId}.ics"`,
+      )
+      .send(ics);
   });
 }
