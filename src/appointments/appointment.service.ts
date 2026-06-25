@@ -1,5 +1,6 @@
 import { AppointmentStatus } from "@prisma/client";
 import { URGENCY_RESPONSE_WINDOWS_MINUTES } from "../utils/constants.js";
+import { wallClockToUtc } from "../utils/datetime.js";
 import { createAppointmentRecord } from "./appointment.repository.js";
 import { CreateAppointmentInput } from "./appointment.schema.js";
 import { pdfQueue } from "../queues/queues.js";
@@ -20,8 +21,8 @@ export const createAppointment = async (input: CreateAppointmentInput) => {
       : AppointmentStatus.OPEN;
 
   const appointment = await createAppointmentRecord({
-    date: new Date(input.date),
-    startTime: new Date(input.startTime),
+    date: wallClockToUtc(input.date),
+    startTime: wallClockToUtc(input.startTime),
     durationMinutes: input.durationMinutes,
     patientName: input.patientName,
     clientName: input.clientName,

@@ -1,5 +1,9 @@
 import { google } from "googleapis";
 import { env } from "../../config/env.js";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+} from "../../utils/datetime.js";
 
 export const SHEETSMS_SUCCESS_MESSAGE = "Message has been sent!";
 
@@ -23,19 +27,9 @@ const getSheetsClient = () => {
   return google.sheets({ version: "v4", auth });
 };
 
-const formatSheetDate = (date: Date) =>
-  date.toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
+const formatSheetDate = (date: Date) => formatAppointmentDate(date);
 
-const formatSheetTime = (date: Date) =>
-  date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+const formatSheetTime = (date: Date) => formatAppointmentTime(date);
 
 export const buildSmsFormula = (row: number, scheduled: boolean) => {
   // TODO(sheetsms): Enable when custom_sender is approved.

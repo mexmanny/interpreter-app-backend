@@ -1,19 +1,6 @@
 import { Appointment } from "@prisma/client";
 import { env } from "../config/env.js";
-
-const formatAppointmentDateTime = (date: Date) => {
-  const datePart = date.toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
-  const timePart = date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return `${datePart} - ${timePart}`;
-};
+import { formatAppointmentDateTime } from "../utils/datetime.js";
 
 export const buildAssignmentConfirmedMessage = (
   appointment: Appointment,

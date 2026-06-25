@@ -31,6 +31,7 @@ const envSchema = z.object({
   REMINDER_ONE_HOUR_MINUTES: z.coerce.number().int().positive().default(60),
   REMINDER_ONE_HOUR_WINDOW_MINUTES: z.coerce.number().int().positive().default(10),
   REMINDER_REPEAT_EVERY_MINUTES: z.coerce.number().int().positive().default(5),
+  APP_TIMEZONE: z.string().default("America/New_York"),
 });
 
 export const env = envSchema.parse(process.env);

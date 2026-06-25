@@ -1,9 +1,13 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
+const wallClockDateTimeSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Expected YYYY-MM-DDTHH:mm");
+
 export const createAppointmentSchema = z.object({
-  date: z.string().datetime(),
-  startTime: z.string().datetime(),
+  date: wallClockDateTimeSchema,
+  startTime: wallClockDateTimeSchema,
   durationMinutes: z.number().int().positive(),
   patientName: z.string().min(1),
   clientName: z.string().min(1),

@@ -7,6 +7,7 @@ import { redisConnection } from "../lib/redis.js";
 import { sendSms } from "../notifications/notification.service.js";
 import { getOneHourReminderWindow } from "../reminders/reminder-window.js";
 import { env } from "../config/env.js";
+import { formatAppointmentDateTime } from "../utils/datetime.js";
 
 export const reminderWorker = new Worker(
   "reminders",
@@ -23,7 +24,7 @@ export const reminderWorker = new Worker(
       const link = `${env.WEB_APP_URL}/interpreter/assignments/${assignment.id}`;
       await sendSms({
         to: assignment.interpreter.phone,
-        message: `Reminder: ${assignment.appointment.facilityName}, ${assignment.appointment.address}, ${assignment.appointment.startTime.toLocaleString()}. Check in: ${link}`,
+        message: `Reminder: ${assignment.appointment.facilityName}, ${assignment.appointment.address}, ${formatAppointmentDateTime(assignment.appointment.startTime)}. Check in: ${link}`,
         assignmentId: assignment.id,
         appointmentId: assignment.appointmentId,
       });

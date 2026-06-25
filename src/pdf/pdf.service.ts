@@ -1,5 +1,9 @@
 import { Appointment } from "@prisma/client";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+} from "../utils/datetime.js";
 
 export const buildAppointmentPdf = async (appointment: Appointment): Promise<Buffer> => {
   const pdfDoc = await PDFDocument.create();
@@ -21,12 +25,12 @@ export const buildAppointmentPdf = async (appointment: Appointment): Promise<Buf
   drawText("Interpreter Appointment", 56, 738, 16, true);
 
   const rows: Array<[string, string]> = [
-    ["Date", appointment.date.toLocaleDateString("en-US")],
+    ["Date", formatAppointmentDate(appointment.date)],
     ["Patient Name", appointment.patientName],
     ["Client / Medical Office", appointment.clientName],
     ["Facility Name", appointment.facilityName],
     ["Address", appointment.address],
-    ["Appointment Time", appointment.startTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })],
+    ["Appointment Time", formatAppointmentTime(appointment.startTime)],
     ["Duration", `${appointment.durationMinutes} minutes`],
     ["Pay Amount", `$${(appointment.payAmountCents / 100).toFixed(2)}`],
     ["Contact Number", appointment.contactNumber ?? ""]
