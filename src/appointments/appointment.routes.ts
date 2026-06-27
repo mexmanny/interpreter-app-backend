@@ -4,6 +4,7 @@ import { createAppointmentJsonSchema, createAppointmentSchema } from "./appointm
 import {
   findAppointmentById,
   findAssignmentRequestsByAppointmentId,
+  findAppointmentsForCoordinator,
   findOpenAppointments,
 } from "./appointment.repository.js";
 import { listPlatformEventsByAppointmentId } from "../platform-events/platform-event.repository.js";
@@ -25,6 +26,11 @@ export async function appointmentRoutes(app: FastifyInstance) {
 
   app.get("/appointments/open", async () => {
     return findOpenAppointments();
+  });
+
+  app.get("/appointments", async (request) => {
+    const query = request.query as { interpreterId?: string };
+    return findAppointmentsForCoordinator(query.interpreterId);
   });
 
   app.get("/appointments/:appointmentId", async (request) => {

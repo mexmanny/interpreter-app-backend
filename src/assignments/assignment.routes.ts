@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { approveAssignment, recordAssignmentEvent, requestAssignment } from "./assignment.service.js";
-import { approveAssignmentJsonSchema, approveAssignmentSchema, assignmentEventJsonSchema, assignmentEventSchema, requestAssignmentJsonSchema, requestAssignmentSchema } from "./assignment.schema.js";
+import { approveAssignment, recordAssignmentEvent, requestAssignment, sendMessageToAssignedInterpreter } from "./assignment.service.js";
+import { approveAssignmentJsonSchema, approveAssignmentSchema, assignmentEventJsonSchema, assignmentEventSchema, requestAssignmentJsonSchema, requestAssignmentSchema, sendAssignmentMessageJsonSchema, sendAssignmentMessageSchema } from "./assignment.schema.js";
 import {
   findAssignmentById,
   findAssignmentEventsByAssignmentId,
@@ -41,4 +41,14 @@ export async function assignmentRoutes(app: FastifyInstance) {
     const input = assignmentEventSchema.parse(request.body);
     return recordAssignmentEvent(params.assignmentId, input.type, input.notes);
   });
+
+  app.post(
+    "/assignments/:assignmentId/message",
+    { schema: { body: sendAssignmentMessageJsonSchema } },
+    async (request) => {
+      const { assignmentId } = request.params as { assignmentId: string };
+      const input = sendAssignmentMessageSchema.parse(request.body);
+      return sendMessageToAssignedInterpreter(assignmentId, input);
+    },
+  );
 }

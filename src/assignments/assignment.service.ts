@@ -6,8 +6,10 @@ import {
   findAssignmentRequestById,
   createAssignmentRequest,
   addAssignmentEvent,
+  findAssignmentById,
 } from "./assignment.repository.js";
-import { RequestAssignmentInput } from "./assignment.schema.js";
+import { RequestAssignmentInput, SendAssignmentMessageInput } from "./assignment.schema.js";
+import { sendSms } from "../notifications/notification.service.js";
 
 export const requestAssignment = async (input: RequestAssignmentInput) => {
   const request = await createAssignmentRequest(input);
@@ -41,4 +43,23 @@ export const recordAssignmentEvent = async (
   const event = await addAssignmentEvent(assignmentId, { type, notes });
   await notificationQueue.add("assignment_event", { assignmentId, eventType: type }, { attempts: 3, backoff: { type: "exponential", delay: 5000 } });
   return event;
+};
+
+export const sendMessageToAssignedInterpreter = async (
+  assignmentId: string,
+  input: SendAssignmentMessageInput,
+) => {
+  const assignment = await findAssignmentById(assignmentId);
+  if (!assignment) {
+    throw Object.assign(new Error("Assignment not found"), { statusCode: 404 });
+  }
+
+  await sendSms({
+    to: assignment.interpreter.phone,
+    message: input.message,
+    assignmentId: assignment.id,
+    appointmentId: assignment.appointmentId,
+  });
+
+  return { sent: true, assignmentId: assignment.id };
 };

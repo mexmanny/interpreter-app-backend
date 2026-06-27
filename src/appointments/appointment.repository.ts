@@ -66,6 +66,36 @@ export const findOpenAppointments = () =>
     orderBy: { startTime: "asc" },
   });
 
+export const findAppointmentsForCoordinator = (interpreterId?: string) =>
+  prisma.appointment.findMany({
+    where: interpreterId
+      ? {
+          OR: [
+            { assignments: { some: { interpreterId } } },
+            { requests: { some: { interpreterId } } },
+            { offers: { some: { interpreterId, status: "PENDING" } } },
+          ],
+        }
+      : undefined,
+    include: {
+      assignments: {
+        include: { interpreter: true },
+        orderBy: { createdAt: "desc" },
+      },
+      requests: {
+        include: { interpreter: true },
+        orderBy: { createdAt: "asc" },
+      },
+      offers: {
+        where: { status: "PENDING" },
+        include: { interpreter: true },
+        orderBy: { createdAt: "desc" },
+      },
+      _count: { select: { requests: true } },
+    },
+    orderBy: { startTime: "desc" },
+  });
+
 export const findAppointmentById = (id: string) =>
   prisma.appointment.findUnique({ where: { id } });
 
